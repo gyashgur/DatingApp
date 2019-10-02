@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
+using AutoMapper;
 
 namespace DatingApp.API
 {
@@ -36,9 +37,16 @@ namespace DatingApp.API
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-      services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+      // services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+      services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+        .AddJsonOptions(opt => {
+          opt.SerializerSettings.ReferenceLoopHandling = 
+             Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+        });
       services.AddCors();
+      services.AddAutoMapper(typeof(DatingRepository).Assembly);
       services.AddScoped<iAuthRepository, AuthRepository>(); // Created once per scope per request, same instance for all calls within the same request. Second Authrepository is the implementation
+      services.AddScoped<IDatingRepository, DatingRepository>(); // for concreate implementation
       services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
               .AddJwtBearer(options => { 
                  options.TokenValidationParameters = new TokenValidationParameters {
